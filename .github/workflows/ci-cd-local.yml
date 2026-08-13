@@ -103,4 +103,4 @@ jobs:
       - name: Smoke test
         run: |
           sleep 5
-          curl --fail http://localhost:3000/
+          curl --fail http://localhost:3000/api/docs/#/
