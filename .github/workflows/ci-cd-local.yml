@@ -1,0 +1,106 @@
+# Nom du workflow GitHub Actions
+name: ci-cd-tp-filrouge
+
+# Définit les événements qui déclenchent automatiquement le workflow
+on:
+
+  # Permet de lancer manuellement le workflow depuis GitHub Actions
+  workflow_dispatch:
+
+  # Déclenche le workflow lorsqu'un push est effectué
+  push:
+    # Le workflow se déclenche uniquement lorsqu'un push est effectué sur main
+    branches: [main]
+  # Déclenche le workflow lorsqu'une Pull Request est ouverte ou modifiée
+  pull_request:
+    # Le workflow concerne uniquement les Pull Requests ciblant main
+    branches: [main]
+
+
+# Définit les différents jobs du workflow CI/CD
+jobs:
+
+  # Job chargé d'installer les dépendances et d'exécuter les tests
+  test:
+
+    # Machine virtuelle Ubuntu utilisée pour exécuter le job
+    runs-on: ubuntu-latest
+
+    # Services supplémentaires nécessaires pendant l'exécution du job
+    services:
+
+      # Lance un conteneur MySQL accessible pendant les tests
+      mysql:
+
+        # Image Docker utilisée pour créer le conteneur MySQL
+        image: mysql:5.7
+
+        # Variables d'environnement utilisées pour configurer MySQL
+        env:
+
+          # Mot de passe du compte root MySQL
+          MYSQL_ROOT_PASSWORD: rootpassword
+          # Nom de la base de données créée automatiquement
+          MYSQL_DATABASE: todolist_db
+
+        # Rend le port MySQL du conteneur accessible depuis la machine Ubuntu
+        ports:
+          - 3306:3306
+
+        # Vérifie que MySQL est réellement prêt avant de poursuivre
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    # Liste des différentes étapes exécutées dans le job test
+    steps:
+
+      # Récupère le code source du repository GitHub
+      - uses: actions/checkout@v6
+
+      # Installe les dépendances du projet Node.js
+      - name: Install dependencies
+        run: npm install
+
+      # Exécute les tests automatisés du projet
+      - name: Run tests
+        env:
+          # Adresse du serveur MySQL utilisé pendant les tests
+          DB_HOST: localhost
+          # Utilisateur utilisé pour se connecter à MySQL
+          DB_USER: root
+          # Mot de passe utilisé pour se connecter à MySQL
+          DB_PASSWORD: rootpassword
+          # Base de données utilisée par l'application pendant les tests
+          DB_NAME: todolist_db
+
+        # Commande permettant de lancer les tests définis dans package.json
+        run: npm run test
+
+
+  # Job chargé de construire et de démarrer l'application avec Docker
+  docker-build-deploy:
+
+    # Ce job ne peut démarrer que si le job test a réussi
+    needs: test
+
+    # Machine virtuelle Ubuntu utilisée pour exécuter le job
+    runs-on: ubuntu-latest
+
+    # Liste des étapes exécutées dans le job Docker
+    steps:
+
+      # Récupère à nouveau le code source du repository
+      - uses: actions/checkout@v6
+
+      # Construit les images Docker et démarre les conteneurs
+      - name: Docker build
+        run: docker-compose up -d --build
+
+      # Vérifie que l'application répond correctement après son démarrage
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl --fail http://localhost:3000/
