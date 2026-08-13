@@ -68,7 +68,7 @@ jobs:
       - name: Run tests
         env:
           # Adresse du serveur MySQL utilisé pendant les tests
-          DB_HOST: localhost
+          DB_HOST: 127.0.0.1
           # Utilisateur utilisé pour se connecter à MySQL
           DB_USER: root
           # Mot de passe utilisé pour se connecter à MySQL
