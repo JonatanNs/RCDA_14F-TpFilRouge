@@ -97,7 +97,7 @@ jobs:
 
       # Construit les images Docker et démarre les conteneurs
       - name: Docker build
-        run: docker-compose up -d --build
+        run: docker compose up -d --build
 
       # Vérifie que l'application répond correctement après son démarrage
       - name: Smoke test
