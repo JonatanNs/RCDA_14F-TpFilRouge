@@ -99,20 +99,18 @@ jobs:
       - name: Docker build
         run: docker compose up -d --build
 
-      
+     
       - name: Wait for API and smoke test
         run: |
-          for i in {1..30}; do
-            if curl --fail http://localhost:3000/ 2>/dev/null; then
+          for i in {1..40}; do
+            if curl --fail http://localhost:3000/api/tasks 2>/dev/null; then
               echo "API is up!"
               exit 0
             fi
-            echo "Waiting for API... ($i/30)"
-            sleep 2
+            echo "Waiting for API... ($i/40)"
+            sleep 3
           done
           echo "API failed to start in time"
-          echo "--- docker ps ---"
           docker ps -a
-          echo "--- docker compose logs ---"
           docker compose logs
           exit 1
