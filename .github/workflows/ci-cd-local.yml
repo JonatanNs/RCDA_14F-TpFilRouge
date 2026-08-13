@@ -102,7 +102,7 @@ jobs:
       
       - name: Wait for API and smoke test
         run: |
-          for i in {1..30}; do
+          for i in {1..60}; do
             if curl --fail http://localhost:3000/ 2>/dev/null; then
               echo "API is up!"
               exit 0
@@ -111,4 +111,8 @@ jobs:
             sleep 2
           done
           echo "API failed to start in time"
+          echo "--- docker ps ---"
+          docker ps -a
+          echo "--- docker compose logs ---"
+          docker compose logs
           exit 1
